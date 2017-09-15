@@ -84,12 +84,13 @@ def unFollowBot():
 		d_diff_int = int(d_diff.days)
         
 		if d_diff_int > 21:
-			r = api.request('friendships/destroy', {'user_id': id})
-			followlist.pop(i)
-			toprint = "Unfollowed after 3 months: " + id
-			logNprint(toprint)
-			#print("Unfollowed after 3 months: " + id)
-			#remove from followlist file
+			try:
+				r = api.request('friendships/destroy', {'user_id': id})
+				followlist.pop(i)
+				toprint = "Unfollowed after 3 months: " + id
+				logNprint(toprint)
+			except:
+				logNprint("Error Occured. Unfollow failed \n")
 		
 
 def checkFollow(item):
@@ -102,20 +103,23 @@ def checkFollow(item):
 		id = user['id']
 
 		if any(string in text.lower() for string in follow_key):
-			r = api.request('friendships/create', {'id': id})
-			
-			toprint = "Following: " + screen_name + "\n"
-			logNprint(toprint)
-			#print ("Following: " + screen_name + "\n")
-			
-			today = datetime.datetime.now()
-			now = today.date()
-			
-			followlist.append(str(id) + "_" + str(now))
+			try:
+				r = api.request('friendships/create', {'id': id})
+				
+				toprint = "Following: " + screen_name + "\n"
+				logNprint(toprint)
+				#print ("Following: " + screen_name + "\n")
+				
+				today = datetime.datetime.now()
+				now = today.date()
+				
+				followlist.append(str(id) + "_" + str(now))
 
-			f_fol = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist", 'a')
-			f_fol.write(str(id) + "_" + str(now) + "\n")
-			f_fol.close()
+				f_fol = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist", 'a')
+				f_fol.write(str(id) + "_" + str(now) + "\n")
+				f_fol.close()
+			except:
+				logNprint("Error occured. Follow failed")
 	else:
 		toprint = "Already following user: " + item['user']['screen_name']
 		logNprint(toprint)
@@ -128,10 +132,12 @@ def checkLike(item):
 	shortened = textwrap.shorten(text, width = 50)
 
 	if any(string in text.lower() for string in fav_key):
-		r = api.request('favorites/create', {'id': id})
-		toprint = "Liked: " + shortened + "\n"
-		logNprint(toprint)
-		#print ("Liked: " + shortened + "\n")
+		try:
+			r = api.request('favorites/create', {'id': id})
+			toprint = "Liked: " + shortened + "\n"
+			logNprint(toprint)
+		except:
+			logNprint("Erorr occured, Like failed")
 
 
 def processQueue():
@@ -144,11 +150,15 @@ def processQueue():
 		logNprint(toprint)
 		
 		text = tweet['text']
-		text = item.replace("\n"," ")
+		text = text.replace("\n"," ")
 		toprint = "Retweeting: " + tweet['text'] + "\n"
 		logNprint(toprint)
 
-		r = api.request('statuses/retweet/:' + str(tweet['id']))
+		try:
+			r = api.request('statuses/retweet/:' + str(tweet['id']))
+		except:
+			logNprint("Error occured. Retweet failed \n")
+		
 		#check for follow request
 		checkFollow(tweet)
 		#check for like/favorite request
@@ -185,111 +195,113 @@ def botCheck(item):
 	
 def getTweets():
 
-	
 	for search_query in search_queries:
-		r = api.request('search/tweets', {'q':search_query, 'result_type':"mixed", 'count':count_per_Search})
-		
-		toprint = "Getting results for " + search_query + "\n"
-		logNprint(toprint)
-
-		
-		for item in r:
+		try:
+			r = api.request('search/tweets', {'q':search_query, 'result_type':"mixed", 'count':count_per_Search})
 			
+			toprint = "Getting results for " + search_query + "\n"
+			logNprint(toprint)
 
-			#collect the tweet data we need based on it if is a retweet or not
-			#tweet data
-			#if there is a retweet_status it is a retweeted tweet
-			if 'retweeted_status' in item:
-				toprint = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n Retweeted item \n"
-				logNprint(toprint)
+			
+			for item in r:
+				
 
-				
-				original_item = item['retweeted_status']#pulls data from original tweet, not the retweet
-				#original user of the tweet data
-				original_user_data = original_item['user']
-				original_screen_name = original_user_data['screen_name']
-				original_user_id = str(original_user_data['id'])
-				
-				#original tweet data
-				original_tweet_id = str(original_item['id'])
-				original_tweet_text = original_item['text']
-				original_have_rted = original_item['retweeted']
-				original_have_fvted = original_item['favorited']
-				
-				botCheck(original_item)
-				
-				if not original_user_id in donotfollow:
-					if not original_tweet_id in ignorelist:
-						toprint = "Okay to process retweet \n"
-						logNprint(toprint)
-
-						ignorelist.append(original_item)
-						tweet_queue.append(original_item)
-						
-						print(" Added to queue. Added to ignore list \n")
-						
-						f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
-						f_ign.write(str(original_tweet_id) + "\n")
-						f_ign.close()
-					else:
-						toprint = "Ignored: " + str(original_tweet_id) + "\n"
-						logNprint(toprint)
-						
-						ignorelist.append(item['id'])
-						
-						f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
-						f_ign.write(str(original_tweet_id) + "\n")
-						f_ign.close()
-						
-				else:
-					toprint = str(original_user_id) + " On do not follow list \n"
-					logNprint(toprint)
-
-						
-				time.sleep(3)
-					
-				
-			else:
-				toprint = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n New item \n"
-				logNprint(toprint)
-				#print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-				#print("New item \n")
-				#user of the tweet data
-				user_data = item['user']# user data in json forma
-				screen_name = user_data['screen_name']#screen name of the specific user who tweeted
-				user_id = str(user_data['id'])# user ID pulled from user data
-				
+				#collect the tweet data we need based on it if is a retweet or not
 				#tweet data
-				text = item['text'] # text of the tweet
-				tweet_id = str(item['id'])#id for the specific tweet
-				have_rted = item['retweeted']#this object holds a true or false value
-				have_fvted = item['favorited']#this object holds true or false value
-
-				botCheck(item)
-				
-				if not user_id in donotfollow:
-					if not tweet_id in ignorelist:
-						toprint = "Okay to process \n"
-						logNprint(toprint)
-
-						tweet_queue.append(item)
-						ignorelist.append(tweet_id)
-						
-						print(" Added to queue. Added to ignore list \n")
-						
-						f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
-						f_ign.write(str(tweet_id) + "\n")
-						f_ign.close()
-					else:
-						toprint = "Ignored: " + str(tweet_id) + "\n"
-						logNprint(toprint)
-
-				else:
-					toprint = str(original_user_id) + " On do not follow list \n"
+				#if there is a retweet_status it is a retweeted tweet
+				if 'retweeted_status' in item:
+					toprint = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n Retweeted item \n"
 					logNprint(toprint)
 
+					
+					original_item = item['retweeted_status']#pulls data from original tweet, not the retweet
+					#original user of the tweet data
+					original_user_data = original_item['user']
+					original_screen_name = original_user_data['screen_name']
+					original_user_id = str(original_user_data['id'])
+					
+					#original tweet data
+					original_tweet_id = str(original_item['id'])
+					original_tweet_text = original_item['text']
+					original_have_rted = original_item['retweeted']
+					original_have_fvted = original_item['favorited']
+					
+					botCheck(original_item)
+					
+					if not original_user_id in donotfollow:
+						if not original_tweet_id in ignorelist:
+							toprint = "Okay to process retweet \n"
+							logNprint(toprint)
+
+							ignorelist.append(original_item)
+							tweet_queue.append(original_item)
+							
+							print(" Added to queue. Added to ignore list \n")
+							
+							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign.write(str(original_tweet_id) + "\n")
+							f_ign.close()
+						else:
+							toprint = "Ignored: " + str(original_tweet_id) + "\n"
+							logNprint(toprint)
+							
+							ignorelist.append(item['id'])
+							
+							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign.write(str(original_tweet_id) + "\n")
+							f_ign.close()
+							
+					else:
+						toprint = str(original_user_id) + " On do not follow list \n"
+						logNprint(toprint)
+
+							
+					time.sleep(3)
 						
-				time.sleep(3)
+					
+				else:
+					toprint = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n New item \n"
+					logNprint(toprint)
+					#print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+					#print("New item \n")
+					#user of the tweet data
+					user_data = item['user']# user data in json forma
+					screen_name = user_data['screen_name']#screen name of the specific user who tweeted
+					user_id = str(user_data['id'])# user ID pulled from user data
+					
+					#tweet data
+					text = item['text'] # text of the tweet
+					tweet_id = str(item['id'])#id for the specific tweet
+					have_rted = item['retweeted']#this object holds a true or false value
+					have_fvted = item['favorited']#this object holds true or false value
+
+					botCheck(item)
+					
+					if not user_id in donotfollow:
+						if not tweet_id in ignorelist:
+							toprint = "Okay to process \n"
+							logNprint(toprint)
+
+							tweet_queue.append(item)
+							ignorelist.append(tweet_id)
+							
+							print(" Added to queue. Added to ignore list \n")
+							
+							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign.write(str(tweet_id) + "\n")
+							f_ign.close()
+						else:
+							toprint = "Ignored: " + str(tweet_id) + "\n"
+							logNprint(toprint)
+
+					else:
+						toprint = str(original_user_id) + " On do not follow list \n"
+						logNprint(toprint)
+
+							
+					time.sleep(3)
+		except:
+			logNprint("Error occured during get tweets")
 
 	
 #Start of the main loop
