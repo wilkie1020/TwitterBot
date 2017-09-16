@@ -8,10 +8,10 @@ import sys
 import datetime
 
 #authentication data
-consumer_key = "<Your tokens here>"
-consumer_secret = "<Your tokens here>"
-access_token_key = "<Your tokens here>"
-access_token_secret = "<Your tokens here>"
+consumer_key = "<Your token here>"
+consumer_secret = "<Your token here>"
+access_token_key = "<Your token here>"
+access_token_secret = "<Your token here>"
 
 #Authenticate
 api = TwitterAPI(consumer_key, consumer_secret, access_token_key, access_token_secret)
@@ -19,7 +19,7 @@ api = TwitterAPI(consumer_key, consumer_secret, access_token_key, access_token_s
 #keywords data
 follow_key = ["follow", "follower", "must be following", "following"]
 fav_key = ["favorite", "fav", "like"]
-search_queries = ["RT to win", "retweet to win", "retweet to enter", "rt to enter", "#retweet to #win", "#retweet to win"]
+search_queries = ["emergency", "help", "donate", "RT to win", "retweet to win", "retweet to enter", "rt to enter", "#retweet to #win", "#retweet to win"]
 #search_queries = ["RT to win"]
 bot_check = ["bot", "b0t"]#May append more like 6 for Bs or 7 for Ts?
 
@@ -33,7 +33,7 @@ count_per_Search = 25
 
 tweet_queue = list()#the list of items to re-tweet/favorite/follow
 
-track_file_path = "Working Folder\\ContestBot\\TwitterBot\\"
+track_file_path = ""
 
 
 # read in the previous data of tracking lists if they exist
@@ -60,7 +60,7 @@ def logNprint(item):
 	
 	print(item)
 	
-	f_log = open("Working Folder\\ContestBot\\TwitterBot\\log", 'a', encoding='utf-8')
+	f_log = open(track_file_path + "log", 'a', encoding='utf-8')
 	f_log.write(item)
 	f_log.close()
 
@@ -93,14 +93,21 @@ def unFollowBot():
 			except:
 				logNprint("Error Occured. Unfollow failed \n")
 		
-		logNprint("Unfollowing all in do not follow list \n")
-		for x in ignorelist:
-			try:
-				r = api.request('friendships/destroy', {'user_id': x})
-				toprint = "Unfollowed bot from do not follow list: " + x + "\n"
-				logNprint(toprint)
-			except:
-				logNprint("Error Occured. Unfollow failed \n")
+	logNprint("Unfollowing all in do not follow list \n")
+	for x in donotfollow:
+		try:
+			r = api.request('users/lookup', {'user_id': x})
+			logNprint(r['following'])
+			if(r['following'] == True):
+				try:
+					r = api.request('friendships/destroy', {'user_id': x})
+					toprint = "Unfollowed bot from do not follow list: " + x + "\n"
+					logNprint(toprint)
+				except:
+					logNprint("Error Occured. Unfollow failed \n")
+		except:
+			logNprint("Error checking follow \n")
+		time.sleep(5)
 		
 
 def checkFollow(item):
@@ -125,7 +132,7 @@ def checkFollow(item):
 				
 				followlist.append(str(id) + "_" + str(now))
 
-				f_fol = open("Working Folder\\ContestBot\\TwitterBot\\followlist", 'a')
+				f_fol = open(track_file_path + "followlist", 'a')
 				f_fol.write(str(id) + "_" + str(now) + "\n")
 				f_fol.close()
 			except:
@@ -179,7 +186,7 @@ def processQueue():
 		logNprint(toprint)
 
 		
-		time.sleep(5)
+		time.sleep(20)
 	
 def botCheck(item):
 	user_data = item['user']
@@ -198,7 +205,7 @@ def botCheck(item):
 			logNprint(toprint)
 
 			
-			f_dnf = open("Working Folder\\ContestBot\\TwitterBot\\donotfollow", 'a')
+			f_dnf = open(track_file_path + "donotfollow", 'a')
 			f_dnf.write(str(user_id) + "\n")
 			f_dnf.close()
 
@@ -239,6 +246,7 @@ def getTweets():
 					botCheck(original_item)
 					
 					if not original_user_id in donotfollow:
+					
 						if not original_tweet_id in ignorelist:
 							toprint = "Okay to process retweet \n"
 							logNprint(toprint)
@@ -248,7 +256,7 @@ def getTweets():
 							
 							print(" Added to queue. Added to ignore list \n")
 							
-							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
+							f_ign = open(track_file_path + "ignorelist", 'a')
 							f_ign.write(str(original_tweet_id) + "\n")
 							f_ign.close()
 						else:
@@ -257,7 +265,7 @@ def getTweets():
 							
 							ignorelist.append(item['id'])
 							
-							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
+							f_ign = open(track_file_path + "ignorelist", 'a')
 							f_ign.write(str(original_tweet_id) + "\n")
 							f_ign.close()
 							
@@ -266,15 +274,13 @@ def getTweets():
 						logNprint(toprint)
 
 							
-					time.sleep(3)
+					time.sleep(5)
 						
 					
 				else:
 					toprint = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n New item \n"
 					logNprint(toprint)
-					#print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-					#print("New item \n")
-					#user of the tweet data
+					
 					user_data = item['user']# user data in json forma
 					screen_name = user_data['screen_name']#screen name of the specific user who tweeted
 					user_id = str(user_data['id'])# user ID pulled from user data
@@ -288,6 +294,7 @@ def getTweets():
 					botCheck(item)
 					
 					if not user_id in donotfollow:
+
 						if not tweet_id in ignorelist:
 							toprint = "Okay to process \n"
 							logNprint(toprint)
@@ -297,7 +304,7 @@ def getTweets():
 							
 							print(" Added to queue. Added to ignore list \n")
 							
-							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
+							f_ign = open(track_file_path + "ignorelist", 'a')
 							f_ign.write(str(tweet_id) + "\n")
 							f_ign.close()
 						else:
@@ -309,7 +316,7 @@ def getTweets():
 						logNprint(toprint)
 
 							
-					time.sleep(3)
+					time.sleep(5)
 		except:
 			logNprint("Error occured during get tweets")
 
@@ -321,7 +328,7 @@ while (True):
 	#print("########################Scanning for Tweets \n")
 	getTweets()
 	
-	time.sleep(5) #Sleep to avoid rate limit
+	time.sleep(7) #Sleep to avoid rate limit
 	toprint = "########################Processing Tweet Queue \n"
 	logNprint(toprint)
 	#print("########################Processing Tweet Queue \n")
@@ -333,31 +340,17 @@ while (True):
 
 	unFollowBot()
 	
-	time.sleep(5) #sleep to avoid rate limiting
+	time.sleep(7) #sleep to avoid rate limiting
 	print("Printing ignore list for testing \n")
-	
-	for x in ignorelist:
-		logNprint(str(x))
-		logNprint("\n")
 		
-	logNprint("\n")
-	logNprint("Printing do not follow list for testing \n")
+	os.remove(track_file_path + "followlist")
 	
-	for x in donotfollow:
-		logNprint(str(x))
-		logNprint("\n")
-		
-	logNprint("\n")
-	logNprint("Printing follow list for testing \n")
-	
-	os.remove("Working Folder\\ContestBot\\TwitterBot\\followlist")
-	
-	f_fol = open("Working Folder\\ContestBot\\TwitterBot\\followlist", 'a')
+	f_fol = open(track_file_path + "followlist", 'a')
 	for x in followlist:
-		logNprint(str(x))
-		logNprint("\n")
 		f_fol.write(x + "\n")
 
 	logNprint("\n")
-	print("Okay to exit")
+	print("Okay to exit. Will continue shortly.")
 	f_fol.close()
+	
+	time.sleep(60)
