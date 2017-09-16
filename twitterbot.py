@@ -8,10 +8,10 @@ import sys
 import datetime
 
 #authentication data
-consumer_key = "<Your key here>"
-consumer_secret = "<Your key here>"
-access_token_key = "<Your key here>"
-access_token_secret = "<Your key here>"
+consumer_key = "<Your tokens here>"
+consumer_secret = "<Your tokens here>"
+access_token_key = "<Your tokens here>"
+access_token_secret = "<Your tokens here>"
 
 #Authenticate
 api = TwitterAPI(consumer_key, consumer_secret, access_token_key, access_token_secret)
@@ -33,24 +33,25 @@ count_per_Search = 25
 
 tweet_queue = list()#the list of items to re-tweet/favorite/follow
 
+track_file_path = "Working Folder\\ContestBot\\TwitterBot\\"
+
 
 # read in the previous data of tracking lists if they exist
-if os.path.isfile('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist'):
+if os.path.isfile(track_file_path + 'ignorelist'):
 	print("Loading ignore list \n")
-	with open('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist') as f:
+	with open(track_file_path + 'ignorelist') as f:
 		ignorelist = f.read().splitlines()
 	f.close()
 	
-if os.path.isfile('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist'):
+if os.path.isfile(track_file_path + 'followlist'):
 	print("Loading follow list \n")
-	with open('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist') as g:
+	with open(track_file_path + 'followlist') as g:
 		followlist = g.read().splitlines()
 	g.close()
-	os.remove('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist')
 	
-if os.path.isfile('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\donotfollow'):
+if os.path.isfile(track_file_path + 'donotfollow'):
 	print("Loading do not follow list \n")
-	with open('C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\donotfollow') as h:
+	with open(track_file_path + 'donotfollow') as h:
 		donotfollow = h.read().splitlines()
 	h.close()
 	
@@ -59,7 +60,7 @@ def logNprint(item):
 	
 	print(item)
 	
-	f_log = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\log", 'a', encoding='utf-8')
+	f_log = open("Working Folder\\ContestBot\\TwitterBot\\log", 'a', encoding='utf-8')
 	f_log.write(item)
 	f_log.close()
 
@@ -115,7 +116,7 @@ def checkFollow(item):
 				
 				followlist.append(str(id) + "_" + str(now))
 
-				f_fol = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist", 'a')
+				f_fol = open("Working Folder\\ContestBot\\TwitterBot\\followlist", 'a')
 				f_fol.write(str(id) + "_" + str(now) + "\n")
 				f_fol.close()
 			except:
@@ -188,7 +189,7 @@ def botCheck(item):
 			logNprint(toprint)
 
 			
-			f_dnf = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\donotfollow", 'a')
+			f_dnf = open("Working Folder\\ContestBot\\TwitterBot\\donotfollow", 'a')
 			f_dnf.write(str(user_id) + "\n")
 			f_dnf.close()
 
@@ -238,7 +239,7 @@ def getTweets():
 							
 							print(" Added to queue. Added to ignore list \n")
 							
-							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
 							f_ign.write(str(original_tweet_id) + "\n")
 							f_ign.close()
 						else:
@@ -247,7 +248,7 @@ def getTweets():
 							
 							ignorelist.append(item['id'])
 							
-							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
 							f_ign.write(str(original_tweet_id) + "\n")
 							f_ign.close()
 							
@@ -287,7 +288,7 @@ def getTweets():
 							
 							print(" Added to queue. Added to ignore list \n")
 							
-							f_ign = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\ignorelist", 'a')
+							f_ign = open("Working Folder\\ContestBot\\TwitterBot\\ignorelist", 'a')
 							f_ign.write(str(tweet_id) + "\n")
 							f_ign.close()
 						else:
@@ -320,25 +321,34 @@ while (True):
 	
 	toprint = "########################Running Unfollow Bot \n"
 	logNprint(toprint)
-	#print("########################Running Unfollow Bot \n")
+
 	unFollowBot()
 	
 	time.sleep(5) #sleep to avoid rate limiting
 	print("Printing ignore list for testing \n")
 	
 	for x in ignorelist:
-		print(str(x))
+		logNprint(str(x))
+		logNprint("\n")
+		
+	logNprint("\n")
+	logNprint("Printing do not follow list for testing \n")
 	
-	#print("Printing do not follow list for testing \n")
 	for x in donotfollow:
-		print(str(x))
+		logNprint(str(x))
+		logNprint("\n")
 		
-	print("Printing follow list for testing \n")
+	logNprint("\n")
+	logNprint("Printing follow list for testing \n")
+	
+	os.remove("Working Folder\\ContestBot\\TwitterBot\\followlist")
+	
+	f_fol = open("Working Folder\\ContestBot\\TwitterBot\\followlist", 'a')
 	for x in followlist:
-		print(str(x))
-		os.remove("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist")
-		f_fol = open("C:\\Users\\Mat\\AppData\\Local\\Programs\\Python\\Python36-32\\Working Folder\\ContestBot\\followlist", 'a')
+		logNprint(str(x))
+		logNprint("\n")
 		f_fol.write(x + "\n")
-		f_fol.close()
-		
-	time.sleep(15) #sleep to let me close now if I want
+
+	logNprint("\n")
+	print("Okay to exit")
+	f_fol.close()
