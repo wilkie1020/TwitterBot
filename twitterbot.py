@@ -93,6 +93,15 @@ def unFollowBot():
 			except:
 				logNprint("Error Occured. Unfollow failed \n")
 		
+		logNprint("Unfollowing all in do not follow list \n")
+		for x in ignorelist:
+			try:
+				r = api.request('friendships/destroy', {'user_id': x})
+				toprint = "Unfollowed bot from do not follow list: " + x + "\n"
+				logNprint(toprint)
+			except:
+				logNprint("Error Occured. Unfollow failed \n")
+		
 
 def checkFollow(item):
 
